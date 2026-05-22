@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Science Lab - Trạm Quét Mã QR Thí Nghiệm</title>
+    <style>
+      /* --- BACKGROUND PHÒNG LAB KHÔNG GIAN TỐI VÀ LƯỚI Ô LY --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Roboto, sans-serif;
+      }
+
+      body {
+        background:
+          linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)),
+          radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
+        color: #f8fafc;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        position: relative;
+      }
+
+      /* Đồng bộ lưới ô ly chìm dưới nền giống 3 bài lab */
+      body::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 40px;
+        z-index: 1;
+      }
+
+      header h1 {
+        font-size: 32px;
+        background: linear-gradient(to right, #38bdf8, #fbbf24, #f43f5e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      header p {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-top: 6px;
+      }
+
+      /* --- BỐ CỤC KHÔNG GIAN THẺ --- */
+      .lab-grid {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 30px;
+        max-width: 1200px;
+        width: 100%;
+        z-index: 1;
+      }
+
+      /* --- THIẾT KẾ THẺ BÀI TƯƠNG TÁC CAO CẤP --- */
+      .lab-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        width: 340px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Hiệu ứng phát sáng Neon riêng biệt cho từng bài khi rê chuột vào */
+      .lab-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      }
+
+      .card-donbay:hover {
+        border-color: #38bdf8;
+        box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
+      }
+      .card-nhiedu:hover {
+        border-color: #f43f5e;
+        box-shadow: 0 0 25px rgba(244, 63, 94, 0.3);
+      }
+      .card-dien:hover {
+        border-color: #fbbf24;
+        box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
+      }
+
+      .lab-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+      }
+
+      .lab-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .card-donbay .lab-title {
+        color: #38bdf8;
+      }
+      .card-nhiedu .lab-title {
+        color: #f43f5e;
+      }
+      .card-dien .lab-title {
+        color: #fbbf24;
+      }
+
+      .lab-desc {
+        font-size: 13px;
+        color: #94a3b8;
+        line-height: 1.5;
+        margin-bottom: 20px;
+        height: 60px;
+      }
+
+      /* KHU VỰC CHỨA MÃ QR ĐỒNG BỘ */
+      .qr-box {
+        background: white;
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s;
+        width: 144px;
+        height: 144px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .lab-card:hover .qr-box {
+        transform: scale(1.05);
+      }
+
+      /* NÚT BẤM VÀO THÍ NGHIỆM TRỰC TIẾP */
+      .btn-entry {
+        width: 100%;
+        border: none;
+        padding: 12px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .card-donbay .btn-entry {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      }
+      .card-nhiedu .btn-entry {
+        background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+      }
+      .card-dien .btn-entry {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+      }
+
+      .btn-entry:hover {
+        filter: brightness(1.15);
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>AR Science Lab</h1>
+      <p>Hệ thống mô phỏng phòng thí nghiệm các hiện tượng vật lý</p>
+    </header>
+
+    <div class="lab-grid">
+      <div class="lab-card card-donbay">
+        <div class="lab-icon">⚖️</div>
+        <div class="lab-title">Thí nghiệm 1: Đòn Bẩy Vật Lý</div>
+        <div class="lab-desc">
+          Khảo sát lực cơ học bập bênh nhún, tính toán cánh tay đòn và hiển thị
+          số liệu lực kế Led.
+        </div>
+
+        <div class="qr-box">
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=don_bay.html"
+            alt="QR Đòn Bẩy"
+          />
+        </div>
+
+        <a href="don_bay.html" class="btn-entry">🚀 Khởi Chạy Thí Nghiệm</a>
+      </div>
+
+      <div class="lab-card card-nhiedu">
+        <div class="lab-icon">🧪</div>
+        <div class="lab-title">Thí nghiệm 2: Sự Nở Vì Nhiệt</div>
+        <div class="lab-desc">
+          Mô phỏng mực chất lỏng co giãn trong ống mao dẫn, tích hợp kính hiển
+          vi soi động lực phân tử vi mô độc đáo.
+        </div>
+
+        <div class="qr-box">
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=su_no_vi_nhiet.html"
+            alt="QR Sự Nở Nhiệt"
+          />
+        </div>
+
+        <a href="su_no_vi_nhiet.html" class="btn-entry"
+          >🚀 Khởi Chạy Thí Nghiệm</a
+        >
+      </div>
+
+      <div class="lab-card card-dien">
+        <div class="lab-icon">⚡</div>
+        <div class="lab-title">Thí nghiệm 3: Tác Dụng Nhiệt</div>
+        <div class="lab-desc">
+          Lắp ráp mạch điện gạt cầu dao, bắt lỗi nối tắt và hiển thị chuyển động
+          dòng hạt electron sinh nhiệt năng.
+        </div>
+
+        <div class="qr-box">
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=tac_dung_nhiet.html"
+            alt="QR Tác Dụng Nhiệt"
+          />
+        </div>
+
+        <a href="tac_dung_nhiet.html" class="btn-entry"
+          >🚀 Khởi Chạy Thí Nghiệm</a
+        >
+      </div>
+    </div>
+  </body>
+</html>

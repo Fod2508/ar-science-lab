@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Science Lab - Sự Nở Vì Nhiệt Cao Cấp</title>
+    <style>
+      /* --- THEME PHÒNG LAB KHÔNG GIAN 3D TỐI --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Roboto, sans-serif;
+      }
+
+      body {
+        background: radial-gradient(circle at center, #1e293b 0%, #0b0f19 100%);
+        color: #f8fafc;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 25px 20px;
+        overflow-x: hidden;
+      }
+
+      /* --- NÚT QUAY TRỞ VỀ TRANG QR CHỦ CỐ ĐỊNH --- */
+      .btn-back-portal {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 10px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 9999; /* Nổi tuyệt đối trên màn hình vi mô */
+        transition: all 0.3s ease;
+      }
+
+      .btn-back-portal:hover {
+        color: #ffffff;
+        background: rgba(51, 65, 85, 0.9);
+        border-color: #f43f5e; /* Phát sáng theo tông đỏ hoa hồng bài nhiệt nở */
+        box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .btn-back-portal .icon-arrow {
+        transition: transform 0.2s ease;
+      }
+
+      .btn-back-portal:hover .icon-arrow {
+        transform: translateX(-3px);
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+        width: 100%;
+        max-width: 1250px;
+      }
+
+      header h1 {
+        font-size: 26px;
+        background: linear-gradient(to right, #38bdf8, #f43f5e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      header p {
+        color: #94a3b8;
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      /* --- THANH ĐƯỜNG KẺ NGĂN CÁCH ĐẦU TRANG ĐỒNG BỘ BÀI 1 --- */
+      .header-divider {
+        width: 100%;
+        max-width: 1250px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(244, 63, 94, 0.3) 50%,
+          transparent 100%
+        );
+        margin-bottom: 25px;
+        box-shadow: 0 1px 4px rgba(244, 63, 94, 0.1);
+      }
+
+      /* --- BỐ CỤC KHÔNG GIAN --- */
+      .container {
+        display: flex;
+        width: 100%;
+        max-width: 1250px;
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .glass-panel {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 18px;
+        flex: 0.9;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      }
+
+      h3 {
+        font-size: 14px;
+        color: #38bdf8;
+        border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+        padding-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .item-list {
+        list-style: none;
+        font-size: 12.5px;
+        color: #cbd5e1;
+        line-height: 1.5;
+      }
+
+      .item-list li {
+        margin-bottom: 8px;
+        padding-left: 15px;
+        position: relative;
+      }
+
+      .item-list li::before {
+        content: "•";
+        color: #f43f5e;
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+      }
+
+      /* --- SÂN KHẤU MÔ PHỎNG TRUNG TÂM --- */
+      .main-lab {
+        flex: 2.2;
+        background: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+        box-shadow:
+          inset 0 0 40px rgba(0, 0, 0, 0.6),
+          0 20px 40px rgba(0, 0, 0, 0.5);
+      }
+
+      .lab-stage {
+        position: relative;
+        width: 100%;
+        height: 380px;
+        border-bottom: 16px solid #1e293b;
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-end;
+        padding-bottom: 15px;
+      }
+
+      /* Lưới kỹ thuật đồ họa */
+      .lab-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.015) 1px,
+            transparent 1px
+          );
+        background-size: 20px 20px;
+        pointer-events: none;
+      }
+
+      /* ĐỒ HỌA CỐC NƯỚC NGHIỆM */
+      .beaker-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        width: 130px;
+      }
+
+      .beaker {
+        width: 100px;
+        height: 120px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        overflow: hidden;
+      }
+
+      .beaker-water {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 75%;
+      }
+
+      .hot-water {
+        background: linear-gradient(
+          to top,
+          rgba(239, 68, 68, 0.25),
+          rgba(239, 68, 68, 0.05)
+        );
+      }
+
+      .cold-water {
+        background: linear-gradient(
+          to top,
+          rgba(59, 130, 246, 0.25),
+          rgba(59, 130, 246, 0.05)
+        );
+      }
+
+      /* Khói bốc mịn màng từ hạt bọt CSS */
+      .steam-particle {
+        position: absolute;
+        bottom: 110px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        filter: blur(2px);
+        animation: riseSteam 2.5s infinite ease-out;
+        pointer-events: none;
+      }
+
+      @keyframes riseSteam {
+        0% {
+          transform: translateY(0) scale(0.5);
+          opacity: 0;
+        }
+        30% {
+          opacity: 0.4;
+        }
+        100% {
+          transform: translateY(-50px) scale(1.5);
+          opacity: 0;
+        }
+      }
+
+      .beaker-label {
+        margin-top: 8px;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 3px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* HỆ THỐNG BÌNH CẦU PHÁT SÁNG THEO NHIỆT */
+      .flask-system {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 10;
+        transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+
+      .glass-tube {
+        width: 8px;
+        height: 130px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-bottom: none;
+        position: relative;
+      }
+
+      .colored-water-column {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 35%;
+        background: #f43f5e;
+        box-shadow: 0 0 10px #f43f5e;
+        transition: height 1.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .rubber-stopper {
+        width: 20px;
+        height: 14px;
+        background: #334155;
+        border-radius: 3px;
+        margin-top: -1px;
+        z-index: 2;
+      }
+
+      .liquid-flask {
+        width: 66px;
+        height: 66px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        margin-top: -4px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset -4px -4px 10px rgba(0, 0, 0, 0.4);
+        transition:
+          filter 1s,
+          box-shadow 1s;
+      }
+
+      .flask-colored-liquid {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60%;
+        background: linear-gradient(to top, #e11d48, #f43f5e);
+        transition: filter 1.2s;
+      }
+
+      /* --- ĐẶC TÍNH SIÊU NÂNG CẤP 1: KÍNH HIỂN VI SOI PHÂN TỬ VĨ MÔ --- */
+      .microscope-viewport {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 3px solid #334155;
+        background: #020617;
+        overflow: hidden;
+        box-shadow:
+          0 0 15px rgba(0, 0, 0, 0.6),
+          inset 0 0 10px rgba(0, 255, 255, 0.1);
+        z-index: 15;
+      }
+
+      .microscope-viewport::after {
+        content: "KÍNH HIỂN VI VI MÔ";
+        position: absolute;
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 7px;
+        color: #64748b;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+
+      .molecule-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .molecule {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: #f43f5e;
+        border-radius: 50%;
+        box-shadow: 0 0 4px #f43f5e;
+      }
+
+      /* --- ĐẶC TÍNH SIÊU NÂNG CẤP 2: KÍNH LÚP NHÌN NGANG TẦM MẮT --- */
+      .zoom-lens-panel {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        width: 80px;
+        height: 140px;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid #f43f5e;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 5px;
+        box-shadow: 0 4px 15px rgba(244, 63, 94, 0.15);
+      }
+
+      .zoom-lens-panel span {
+        font-size: 8px;
+        font-weight: bold;
+        color: #f43f5e;
+        margin-bottom: 4px;
+        text-align: center;
+      }
+
+      .zoom-view-tube {
+        width: 100%;
+        flex: 1;
+        background: #090d16;
+        border: 1px solid #334155;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Vạch kẻ đo li-mét cận cảnh */
+      .zoom-ticks {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .zoom-ticks div {
+        width: 100%;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .zoom-water-level {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 35%;
+        background: linear-gradient(90deg, #e11d48, #f43f5e);
+        box-shadow: 0 -2px 6px #f43f5e;
+        transition: height 1.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* Đường hồng tâm chỉ ngang tầm mắt chuẩn khoa học */
+      .eye-level-line {
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        background: rgba(16, 185, 129, 0.6);
+        top: 50%;
+        left: 0;
+        z-index: 5;
+      }
+      .eye-level-line::before {
+        content: "TẦM MẮT";
+        position: absolute;
+        font-size: 5px;
+        color: #10b981;
+        top: -8px;
+        left: 2px;
+      }
+
+      /* --- ĐIỀU KHIỂN & SỔ TAY --- */
+      .control-panel {
+        background: rgba(9, 13, 22, 0.7);
+        padding: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .btn-lab {
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: white;
+      }
+
+      .btn-hot {
+        background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+        box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+      }
+      .btn-cold {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+      }
+      .btn-reset {
+        background: linear-gradient(135deg, #475569 0%, #334155 100%);
+      }
+      .btn-lab:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.15);
+      }
+
+      .notebook-panel {
+        background: #fbfaf5;
+        color: #1e293b;
+        border-left: 6px solid #f43f5e;
+      }
+
+      .notebook-panel h3 {
+        color: #be123c;
+        border-bottom: 2px solid rgba(190, 18, 60, 0.1);
+      }
+
+      .record-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 12.5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      }
+
+      .insight-box {
+        background: #fff1f2;
+        border: 1px solid #ffe4e6;
+        border-radius: 10px;
+        padding: 12px;
+        color: #9f1239;
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.5;
+        margin-top: auto;
+        text-align: justify;
+      }
+
+      @media (max-width: 968px) {
+        .container {
+          flex-direction: column;
+        }
+        .glass-panel {
+          flex: none;
+          width: 100%;
+        }
+        .btn-back-portal {
+          position: absolute;
+          top: 15px;
+          left: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="qr.html" class="btn-back-portal">
+      <span class="icon-arrow">⬅</span> Quay về Trang Chủ QR
+    </a>
+
+    <header>
+      <h1>AR Science Lab</h1>
+      <p>Phòng Thí Nghiệm: Hiện tượng Sự Nở Vì Nhiệt Của Chất Lỏng</p>
+    </header>
+
+    <div class="header-divider"></div>
+
+    <div class="container">
+      <div class="glass-panel">
+        <div>
+          <h3>📦 Thiết bị đo đạc</h3>
+          <ul class="item-list" style="margin-top: 8px">
+            <li>Bình cầu thủy tinh chưng cất hóa học</li>
+            <li>Ống mao dẫn nhỏ quan sát mực chất lỏng</li>
+            <li>Dung dịch nước màu hồng chỉ thị nhiệt</li>
+            <li>Trạm hiển thị cấu trúc phân tử vi mô</li>
+          </ul>
+        </div>
+        <div>
+          <h3>⚡ Thao tác thực hành</h3>
+          <ol
+            class="item-list"
+            style="margin-top: 8px; list-style: decimal; padding-left: 15px"
+          >
+            <li>Nhấp nút điều hướng để nhúng bình vào các cốc nước.</li>
+            <li>
+              Quan sát sự thay đổi nhiệt độ lan tỏa trên vỏ bình thủy tinh.
+            </li>
+            <li>
+              Đối chiếu vận tốc dao động phân tử qua màn hình hiển thị vi mô.
+            </li>
+            <li>
+              Theo dõi **mực nước ngang tầm mắt** tại ống ngắm lúp bên trái.
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="main-lab">
+        <div class="zoom-lens-panel">
+          <span>NGẮM NGANG<br />TẦM MẮT</span>
+          <div class="zoom-view-tube">
+            <div class="eye-level-line"></div>
+            <div class="zoom-ticks">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <div class="zoom-water-level" id="zoomLevel"></div>
+          </div>
+        </div>
+
+        <div class="microscope-viewport">
+          <div class="molecule-container" id="moleculeContainer"></div>
+        </div>
+
+        <div class="lab-stage" id="labStage">
+          <div class="beaker-container">
+            <div class="beaker">
+              <div class="beaker-water hot-water"></div>
+            </div>
+            <span
+              class="beaker-label"
+              style="background: rgba(244, 63, 94, 0.15); color: #f43f5e"
+              >CỐC NƯỚC NÓNG</span
+            >
+          </div>
+
+          <div class="beaker-container">
+            <div class="beaker">
+              <div class="beaker-water cold-water"></div>
+            </div>
+            <span
+              class="beaker-label"
+              style="background: rgba(59, 130, 246, 0.15); color: #3b82f6"
+              >CỐC NƯỚC LẠNH</span
+            >
+          </div>
+
+          <div class="flask-system" id="flaskSystem">
+            <div class="glass-tube">
+              <div class="colored-water-column" id="waterColumn"></div>
+            </div>
+            <div class="rubber-stopper"></div>
+            <div class="liquid-flask" id="flaskBody">
+              <div class="flask-colored-liquid" id="flaskLiquid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-panel">
+          <button class="btn-lab btn-hot" id="goHot">
+            🔥 Nhúng vào Cốc Nước Nóng
+          </button>
+          <button class="btn-lab btn-cold" id="goCold">
+            ❄ Nhúng vào Cốc Nước Lạnh
+          </button>
+          <button class="btn-lab btn-reset" id="goReset">
+            🔄 Trả về bàn Lab
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-panel notebook-panel">
+        <h3>📝 Bản tường trình ảo</h3>
+        <div class="record-card">
+          <span style="color: #64748b; font-weight: bold"
+            >Môi trường nhiệt:</span
+          >
+          <span id="noteEnv" style="font-weight: 700; color: #334155"
+            >Nhiệt độ phòng</span
+          >
+        </div>
+        <div class="record-card">
+          <span style="color: #64748b; font-weight: bold"
+            >Trạng thái phân tử:</span
+          >
+          <span id="noteMolecule" style="font-weight: 700; color: #475569"
+            >Dao động cơ bản</span
+          >
+        </div>
+        <div class="record-card">
+          <span style="color: #64748b; font-weight: bold"
+            >Mực chất lỏng ống ngắm:</span
+          >
+          <span id="noteHeight" style="font-weight: 700; color: #475569"
+            >Bình thường (35%)</span
+          >
+        </div>
+
+        <div class="insight-box">
+          💡 <b>KHẢO SÁT VẬT LÝ HỌC:</b><br />
+          <span id="insightDesc"
+            >Hệ thống đang hoạt động ở trạng thái tĩnh. Hãy bắt đầu chọn môi
+            trường để quan sát phản ứng vi mô của chất lỏng.</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const flask = document.getElementById("flaskSystem");
+      const flaskBody = document.getElementById("flaskBody");
+      const flaskLiquid = document.getElementById("flaskLiquid");
+      const waterColumn = document.getElementById("waterColumn");
+      const zoomLevel = document.getElementById("zoomLevel");
+
+      const noteEnv = document.getElementById("noteEnv");
+      const noteMolecule = document.getElementById("noteMolecule");
+      const noteHeight = document.getElementById("noteHeight");
+      const insightDesc = document.getElementById("insightDesc");
+      const molContainer = document.getElementById("moleculeContainer");
+      const labStage = document.getElementById("labStage");
+
+      function createSteamParticles() {
+        for (let i = 0; i < 8; i++) {
+          let particle = document.createElement("div");
+          particle.className = "steam-particle";
+          particle.innerText = "♨";
+          particle.style.left = 45 + Math.random() * 40 + "px";
+          particle.style.animationDelay = Math.random() * 2 + "s";
+          particle.style.fontSize = 12 + Math.random() * 10 + "px";
+          document
+            .getElementsByClassName("beaker-container")[0]
+            .appendChild(particle);
+        }
+      }
+      createSteamParticles();
+
+      const molecules = [];
+      const numMolecules = 15;
+      let speedMultiplier = 1;
+      let spacingValue = 18;
+
+      function initMolecules() {
+        molContainer.innerHTML = "";
+        for (let i = 0; i < numMolecules; i++) {
+          let dot = document.createElement("div");
+          dot.className = "molecule";
+          let angle = Math.random() * Math.PI * 2;
+          let radius = Math.random() * 25;
+          let x = 50 + Math.cos(angle) * radius;
+          let y = 50 + Math.sin(angle) * radius;
+
+          dot.style.left = x + "px";
+          dot.style.top = y + "px";
+          molContainer.appendChild(dot);
+
+          molecules.push({
+            element: dot,
+            baseX: x,
+            baseY: y,
+            angle: Math.random() * Math.PI * 2,
+            speed: 0.5 + Math.random() * 0.5,
+          });
+        }
+      }
+      initMolecules();
+
+      function animateMolecules() {
+        molecules.forEach((mol, index) => {
+          mol.angle += 0.05 * speedMultiplier;
+          let offset = Math.sin(mol.angle) * (speedMultiplier * 2);
+
+          let centerX = 50;
+          let centerY = 45;
+          let dx = mol.baseX - centerX;
+          let dy = mol.baseY - centerY;
+
+          let currentX =
+            centerX +
+            dx * (spacingValue / 18) +
+            Math.cos(mol.angle) * (speedMultiplier * 0.8);
+          let currentY =
+            centerY +
+            dy * (spacingValue / 18) +
+            Math.sin(mol.angle) * (speedMultiplier * 0.8);
+
+          if (currentX < 15) currentX = 15;
+          if (currentX > 85) currentX = 85;
+          if (currentY < 15) currentY = 15;
+          if (currentY > 75) currentY = 75;
+
+          mol.element.style.left = currentX + "px";
+          mol.element.style.top = currentY + "px";
+        });
+        requestAnimationFrame(animateMolecules);
+      }
+      animateMolecules();
+
+      document.getElementById("goHot").addEventListener("click", () => {
+        flask.style.bottom = "60px";
+        flask.style.left = "21%";
+        flask.style.transform = "translateX(0)";
+
+        flaskBody.style.borderColor = "#ef4444";
+        flaskBody.style.boxShadow =
+          "0 0 20px rgba(239, 68, 68, 0.6), inset -4px -4px 10px rgba(0,0,0,0.4)";
+        flaskLiquid.style.filter = "hue-rotate(-20deg) brightness(1.2)";
+
+        waterColumn.style.height = "85%";
+        zoomLevel.style.height = "85%";
+
+        noteEnv.innerText = "Nước Nóng Nhiệt Cao 🔥";
+        noteEnv.style.color = "#ef4444";
+        noteMolecule.innerText = "Chuyển động hỗn loạn, đẩy xa";
+        noteMolecule.style.color = "#f43f5e";
+        noteHeight.innerText = "Dâng cao vượt mức (85%)";
+        noteHeight.style.color = "#be123c";
+
+        insightDesc.innerHTML =
+          "✔ <b>Hiện tượng vi mô:</b> Xem kính hiển vi, bạn sẽ thấy các phân tử nước hấp thụ nhiệt lượng, <b>dao động cực nhanh và đẩy nhau ra xa hơn</b>. <br><br>💡 <b>Bản chất cơ học:</b> Khoảng cách phân tử tăng làm cho toàn bộ thể tích chất lỏng nở ra. Do bình cầu giới hạn không gian, chất lỏng buộc phải dâng cao lên ống thủy tinh dọc tầm mắt.";
+
+        speedMultiplier = 4;
+        spacingValue = 28;
+      });
+
+      document.getElementById("goCold").addEventListener("click", () => {
+        flask.style.bottom = "60px";
+        flask.style.left = "71%";
+        flask.style.transform = "translateX(0)";
+
+        flaskBody.style.borderColor = "#3b82f6";
+        flaskBody.style.boxShadow =
+          "0 0 20px rgba(59, 130, 246, 0.5), inset -4px -4px 10px rgba(0,0,0,0.4)";
+        flaskLiquid.style.filter = "hue-rotate(30deg) brightness(0.8)";
+
+        waterColumn.style.height = "12%";
+        zoomLevel.style.height = "12%";
+
+        noteEnv.innerText = "Nước Đá Lạnh Sâu ❄";
+        noteEnv.style.color = "#3b82f6";
+        noteMolecule.innerText = "Dao động yếu, thu hẹp";
+        noteMolecule.style.color = "#1d4ed8";
+        noteHeight.innerText = "Rút sâu xuống đáy (12%)";
+        noteHeight.style.color = "#1e3a8a";
+
+        insightDesc.innerHTML =
+          "✔ <b>Hiện tượng vi mô:</b> Khi tỏa nhiệt vào nước đá, các phân tử chất lỏng bị mất bớt năng lượng, chuyển động <b>chậm lại rõ rệt và co cụm lại sát nhau</b>. <br><br>💡 <b>Bản chất cơ học:</b> Khoảng cách phân tử thu hẹp tối đa khiến tổng thể tích chất lỏng co lại, làm mực nước tụt sâu trong ống nghiệm mao dẫn.";
+
+        speedMultiplier = 0.5;
+        spacingValue = 12;
+      });
+
+      document.getElementById("goReset").addEventListener("click", () => {
+        flask.style.bottom = "15px";
+        flask.style.left = "50%";
+        flask.style.transform = "translateX(-50%)";
+
+        flaskBody.style.borderColor = "rgba(255, 255, 255, 0.3)";
+        flaskBody.style.boxShadow = "inset -4px -4px 10px rgba(0,0,0,0.4)";
+        flaskLiquid.style.filter = "none";
+
+        waterColumn.style.height = "35%";
+        zoomLevel.style.height = "35%";
+
+        noteEnv.innerText = "Nhiệt độ phòng";
+        noteEnv.style.color = "#334155";
+        noteMolecule.innerText = "Dao động cơ bản";
+        noteMolecule.style.color = "#475569";
+        noteHeight.innerText = "Bình thường (35%)";
+        noteHeight.style.color = "#475569";
+        insightDesc.innerHTML =
+          "Hệ thống đã phục hồi trạng thái tĩnh. Hãy nhấp chọn các cốc môi trường để thực hiện đo đạc dữ liệu lý thuyết.";
+
+        speedMultiplier = 1;
+        spacingValue = 18;
+      });
+    </script>
+  </body>
+</html>

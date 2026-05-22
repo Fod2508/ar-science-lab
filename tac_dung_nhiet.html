@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realistic Simulator Lab - Tác Dụng Nhiệt Dòng Điện</title>
+    <style>
+      /* --- KHÔNG GIAN PHÒNG LAB THỰC TẾ --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Roboto, sans-serif;
+      }
+
+      body {
+        background:
+          linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)),
+          radial-gradient(circle at center, #334155 0%, #0f172a 100%);
+        color: #f8fafc;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 25px 20px;
+      }
+
+      /* --- NÚT QUAY TRỞ VỀ TRANG QR CHỦ CỐ ĐỊNH PHÁT SÁNG --- */
+      .btn-back-portal {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 10px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 9999; /* Đảm bảo nổi hẳn lên trên bề mặt bản vẽ SVG */
+        transition: all 0.3s ease;
+      }
+
+      .btn-back-portal:hover {
+        color: #ffffff;
+        background: rgba(51, 65, 85, 0.9);
+        border-color: #fbbf24; /* Phát sáng sọc vàng theo phong cách khối điện */
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .btn-back-portal .icon-arrow {
+        transition: transform 0.2s ease;
+      }
+
+      .btn-back-portal:hover .icon-arrow {
+        transform: translateX(-3px);
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+        width: 100%;
+        max-width: 1250px;
+      }
+
+      header h1 {
+        font-size: 26px;
+        background: linear-gradient(to right, #fbbf24, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+
+      header p {
+        color: #94a3b8;
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      /* --- THANH ĐƯỜNG KẺ NGĂN CÁCH ĐẦU TRANG ĐỒNG BỘ BÀI 1 & BÀI 2 --- */
+      .header-divider {
+        width: 100%;
+        max-width: 1250px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(251, 191, 36, 0.3) 50%,
+          transparent 100%
+        );
+        margin-bottom: 25px;
+        box-shadow: 0 1px 4px rgba(251, 191, 36, 0.1);
+      }
+
+      .container {
+        display: flex;
+        width: 100%;
+        max-width: 1250px;
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .glass-panel {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 18px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      }
+
+      h3 {
+        font-size: 14px;
+        color: #fbbf24;
+        border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+        padding-bottom: 6px;
+        text-transform: uppercase;
+      }
+
+      .item-list {
+        list-style: none;
+        font-size: 12.5px;
+        color: #cbd5e1;
+        line-height: 1.6;
+      }
+
+      .item-list li {
+        margin-bottom: 8px;
+        padding-left: 15px;
+        position: relative;
+      }
+
+      .item-list li::before {
+        content: "•";
+        color: #fbbf24;
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+      }
+
+      /* --- SÂN KHẤU MÔ PHỎNG TRUNG TÂM --- */
+      .main-lab {
+        flex: 2.2;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .lab-stage {
+        position: relative;
+        width: 100%;
+        height: 380px;
+        background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
+        border: 4px solid #475569;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow:
+          inset 0 0 40px rgba(0, 0, 0, 0.8),
+          0 20px 40px rgba(0, 0, 0, 0.6);
+      }
+
+      .lab-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* --- THIẾT KẾ LINH KIỆN THỰC TẾ --- */
+      .component-real {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+      }
+
+      .terminal {
+        width: 22px;
+        height: 22px;
+        background: radial-gradient(circle, #fbbf24 0%, #b45309 100%);
+        border: 2px solid #fef08a;
+        border-radius: 50%;
+        position: absolute;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        transition: all 0.2s ease;
+        z-index: 10;
+      }
+      .terminal:hover {
+        transform: scale(1.25);
+        box-shadow: 0 0 12px #fbbf24;
+      }
+      .terminal.connected {
+        background: radial-gradient(circle, #10b981 0%, #047857 100%);
+        border-color: #a7f3d0;
+        box-shadow: 0 0 10px #10b981;
+      }
+
+      #batteryNode {
+        top: 145px;
+        left: 45px;
+        width: 140px;
+        height: 85px;
+        background: linear-gradient(
+          to bottom,
+          #1e3a8a 0%,
+          #3b82f6 40%,
+          #2563eb 60%,
+          #172554 100%
+        );
+        border-radius: 10px;
+        border: 2px solid #1d4ed8;
+        box-shadow: 5px 12px 20px rgba(0, 0, 0, 0.5);
+      }
+      #batteryNode::after {
+        content: "";
+        position: absolute;
+        right: -8px;
+        top: 28px;
+        width: 8px;
+        height: 28px;
+        background: linear-gradient(to bottom, #cbd5e1, #94a3b8, #475569);
+        border-radius: 0 5px 5px 0;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .battery-label {
+        font-size: 11px;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      .sign {
+        position: absolute;
+        font-size: 18px;
+        font-weight: 900;
+      }
+      .sign-plus {
+        top: 32px;
+        right: 12px;
+        color: #f43f5e;
+        text-shadow: 0 0 6px #f43f5e;
+      }
+      .sign-minus {
+        top: 32px;
+        left: 12px;
+        color: #60a5fa;
+        text-shadow: 0 0 6px #60a5fa;
+      }
+
+      #switchNode {
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 140px;
+        height: 90px;
+        background: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 8px;
+        border: 3px solid #cbd5e1;
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.6);
+      }
+      .switch-base-line {
+        width: 75%;
+        height: 6px;
+        background: #94a3b8;
+        margin-bottom: 8px;
+        border-radius: 3px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+      .switch-lever {
+        width: 55px;
+        height: 8px;
+        background: linear-gradient(to bottom, #fbbf24, #d97706);
+        transform-origin: left center;
+        transform: rotate(-35deg);
+        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-radius: 4px;
+        position: relative;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+      }
+      .switch-lever::after {
+        content: "";
+        position: absolute;
+        right: -12px;
+        top: -5px;
+        width: 14px;
+        height: 18px;
+        background: linear-gradient(to bottom, #334155, #0f172a);
+        border-radius: 4px;
+      }
+      #switchNode.active .switch-lever {
+        transform: rotate(0deg);
+      }
+
+      .btn-toggle {
+        margin-top: 10px;
+        background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        font-size: 11px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      #lampNode {
+        top: 130px;
+        right: 45px;
+        width: 125px;
+        height: 125px;
+        background: radial-gradient(circle, #f8fafc 0%, #d8e2ef 100%);
+        border-radius: 50%;
+        border: 4px solid #cbd5e1;
+        box-shadow: -5px 12px 22px rgba(0, 0, 0, 0.5);
+      }
+      .bulb-glass {
+        width: 46px;
+        height: 46px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        position: relative;
+        z-index: 2;
+        transition: all 0.4s ease;
+      }
+      #lampNode.glowing .bulb-glass {
+        background: radial-gradient(circle, #fbbf24 10%, #ffedd5 100%);
+        box-shadow:
+          0 0 35px #fbbf24,
+          0 0 70px rgba(251, 191, 36, 0.5);
+        border-color: #fde047;
+      }
+      .filament {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 14px;
+        height: 6px;
+        border: 2px solid #94a3b8;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+      }
+      #lampNode.glowing .filament {
+        border-color: #ef4444;
+        box-shadow: 0 0 6px #ef4444;
+      }
+
+      .heat-wave {
+        position: absolute;
+        top: -15px;
+        font-size: 18px;
+        color: #ef4444;
+        opacity: 0;
+        pointer-events: none;
+      }
+      #lampNode.glowing .heat-wave {
+        opacity: 0.7;
+        animation: radiateHeat 1.2s infinite ease-out;
+      }
+      @keyframes radiateHeat {
+        0% {
+          transform: translateY(0) scale(0.8);
+          opacity: 0.7;
+        }
+        100% {
+          transform: translateY(-25px) scale(1.3);
+          opacity: 0;
+        }
+      }
+
+      /* --- HỆ THỐNG SVG ĐƯỜNG DÂY --- */
+      svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+      path {
+        fill: none;
+        stroke-width: 5px;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+      }
+      path.pos-wire {
+        stroke: #dc2626;
+      }
+      path.neg-wire {
+        stroke: #1d4ed8;
+      }
+      path.powered.pos-wire {
+        stroke: #f43f5e;
+        filter: drop-shadow(0 0 10px #f43f5e);
+      }
+      path.powered.neg-wire {
+        stroke: #3b82f6;
+        filter: drop-shadow(0 0 10px #3b82f6);
+      }
+
+      .electron-flow {
+        stroke: #fef08a;
+        stroke-width: 3.5px;
+        stroke-dasharray: 6, 25;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+        animation: flowAnimation 1s infinite linear;
+        opacity: 0;
+      }
+      #lampNode.glowing ~ svg .electron-flow {
+        opacity: 1;
+      }
+      @keyframes flowAnimation {
+        to {
+          stroke-dashoffset: -31;
+        }
+      }
+
+      /* --- KHU VỰC ĐIỀU KHIỂN & BẢNG ĐO THÔNG SỐ --- */
+      .bottom-controls {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .action-row {
+        display: flex;
+        justify-content: center;
+      }
+
+      .btn-action {
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+        transition: all 0.2s;
+      }
+      .btn-action:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.1);
+      }
+
+      .multimeter-panel {
+        display: flex;
+        justify-content: space-around;
+        background: #090d16;
+        border: 2px solid #334155;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .gauge-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .gauge-label {
+        font-size: 10px;
+        color: #94a3b8;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .gauge-screen {
+        background: #020617;
+        border: 1px solid #1e293b;
+        color: #06b6d4;
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 4px;
+        min-width: 80px;
+        text-align: center;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+        text-shadow: 0 0 6px rgba(6, 182, 212, 0.6);
+        transition: color 0.3s;
+      }
+
+      .gauge-box.active .gauge-screen {
+        color: #22c55e;
+        text-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+      }
+
+      /* --- SỔ TAY ĐIỆN TRƯỜNG --- */
+      .notebook-panel {
+        background: #fdfdfa;
+        color: #1e293b;
+        border-left: 6px solid #f59e0b;
+      }
+      .notebook-panel h3 {
+        color: #b45309;
+        border-bottom: 2px solid rgba(180, 83, 9, 0.1);
+      }
+
+      .record-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12.5px;
+      }
+      .insight-box {
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 14px;
+        color: #78350f;
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.5;
+        margin-top: auto;
+      }
+
+      @media (max-width: 968px) {
+        .container {
+          flex-direction: column;
+        }
+        .glass-panel {
+          flex: none;
+          width: 100%;
+        }
+        .btn-back-portal {
+          position: absolute;
+          top: 15px;
+          left: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="qr.html" class="btn-back-portal">
+      <span class="icon-arrow">⬅</span> Quay về Trang Chủ QR
+    </a>
+
+    <header>
+      <h1>AR Science Lab</h1>
+      <p>Phòng thí nghiệm: Khảo Sát Tác Dụng Nhiệt Của Dòng Điện</p>
+    </header>
+
+    <div class="header-divider"></div>
+
+    <div class="container">
+      <div class="glass-panel">
+        <div>
+          <h3>📦 Thiết bị mạch điện</h3>
+          <ul class="item-list" style="margin-top: 8px">
+            <li>Bộ nguồn Pin Đại DC cung cấp điện năng ổn định</li>
+            <li>Cầu dao gạt an toàn điều khiển ngắt/đóng mạch</li>
+            <li>Bóng đèn dây tóc gắn đế sứ chỉ thị nhiệt năng</li>
+            <li>Hệ thống cáp nối dây đồng bọc cách điện</li>
+          </ul>
+        </div>
+        <div>
+          <h3>⚡ Các bước lắp mạch</h3>
+          <ol
+            class="item-list"
+            style="margin-top: 8px; list-style: decimal; padding-left: 15px"
+          >
+            <li>
+              <b>Nối mạch kín:</b> Nhấp chọn một cổng vít đồng của linh kiện
+              này, sau đó chọn cổng vít của linh kiện khác để đi dây gấp khúc
+              tách biệt.
+            </li>
+            <li>
+              <b>Sơ đồ tiêu chuẩn bắt buộc:</b> Cực (+) Pin → Cầu dao → Đèn →
+              Cực (-) Pin.
+            </li>
+            <li>
+              Mỗi đầu kẹp vít linh kiện chỉ được cắm duy nhất 1 đầu dây dẫn.
+            </li>
+            <li>
+              Bấm nút <b>"GẠT CẦU DAO"</b> ở khối giữa để đóng điện chạy qua
+              mạch thí nghiệm.
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="main-lab">
+        <div class="lab-stage" id="labStage">
+          <svg id="svgCanvas"></svg>
+
+          <div class="component-real" id="batteryNode">
+            <span class="battery-label">PIN ĐẠI (DC)</span>
+            <span class="sign sign-minus">-</span>
+            <span class="sign sign-plus">+</span>
+            <div
+              class="terminal"
+              id="t_bat_neg"
+              style="left: 20px; bottom: -11px"
+            ></div>
+            <div
+              class="terminal"
+              id="t_bat_pos"
+              style="right: 20px; top: -11px"
+            ></div>
+          </div>
+
+          <div class="component-real" id="switchNode">
+            <div class="switch-base-line"></div>
+            <div class="switch-lever" id="leverShape"></div>
+            <button class="btn-toggle" id="btnToggleSwitch" style="z-index: 12">
+              GẠT CẦU DAO
+            </button>
+            <div
+              class="terminal"
+              id="t_sw_in"
+              style="left: -11px; top: 34px"
+            ></div>
+            <div
+              class="terminal"
+              id="t_sw_out"
+              style="right: -11px; top: 34px"
+            ></div>
+          </div>
+
+          <div class="component-real" id="lampNode">
+            <div class="heat-wave" style="left: 38px">♨</div>
+            <div class="heat-wave" style="animation-delay: 0.4s; right: 38px">
+              ♨
+            </div>
+            <div class="bulb-glass">
+              <div class="filament"></div>
+            </div>
+            <div
+              class="terminal"
+              id="t_lamp_in"
+              style="left: 15px; top: -11px"
+            ></div>
+            <div
+              class="terminal"
+              id="t_lamp_out"
+              style="right: 15px; bottom: -11px"
+            ></div>
+          </div>
+        </div>
+
+        <div class="bottom-controls">
+          <div class="action-row">
+            <button class="btn-action" id="btnResetCircuit">
+              🔄 Tháo Rời & Làm Lại Mạch
+            </button>
+          </div>
+
+          <div class="multimeter-panel">
+            <div class="gauge-box" id="vGauge">
+              <span class="gauge-label">Hiệu điện thế (U)</span>
+              <div class="gauge-screen" id="txtVolts">0.00 V</div>
+            </div>
+            <div class="gauge-box" id="aGauge">
+              <span class="gauge-label">Cường độ dòng điện (I)</span>
+              <div class="gauge-screen" id="txtAmps">0.00 A</div>
+            </div>
+            <div class="gauge-box" id="rGauge">
+              <span class="gauge-label">Điện trở (R)</span>
+              <div class="gauge-screen" id="txtOhms">0.00 Ω</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel notebook-panel">
+        <h3>📝 Sổ tay điện trường</h3>
+        <div class="record-card">
+          <span style="color: #64748b; font-weight: bold">Cấu trúc mạch:</span>
+          <span id="logCircuit" style="font-weight: 700; color: #ef4444"
+            >Chưa hoàn thành mạch</span
+          >
+        </div>
+        <div class="record-card">
+          <span style="color: #64748b; font-weight: bold"
+            >Trạng thái Cầu dao:</span
+          >
+          <span id="logSwitch" style="font-weight: 700; color: #ef4444"
+            >Đang Mở (OFF)</span
+          >
+        </div>
+        <div class="record-card">
+          <span style="color: #64748b; font-weight: bold"
+            >Tác dụng đo được:</span
+          >
+          <span id="logEffect" style="font-weight: 700; color: #64748b"
+            >Không có dòng điện</span
+          >
+        </div>
+
+        <div class="insight-box">
+          💡 <b>KẾT LUẬN THỰC TIỄN:</b><br />
+          <span id="insightDesc"
+            >Hệ thống đang mở mạch. Học sinh hãy nối các dây dẫn từ cổng kẹp
+            linh kiện theo đúng sơ đồ khép kín để kích hoạt dòng điện.</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const svgCanvas = document.getElementById("svgCanvas");
+      const lampNode = document.getElementById("lampNode");
+      const switchNode = document.getElementById("switchNode");
+      const leverShape = document.getElementById("leverShape");
+      const logCircuit = document.getElementById("logCircuit");
+      const logSwitch = document.getElementById("logSwitch");
+      const logEffect = document.getElementById("logEffect");
+      const insightDesc = document.getElementById("insightDesc");
+
+      const txtVolts = document.getElementById("txtVolts");
+      const txtAmps = document.getElementById("txtAmps");
+      const txtOhms = document.getElementById("txtOhms");
+      const vGauge = document.getElementById("vGauge");
+      const aGauge = document.getElementById("aGauge");
+      const rGauge = document.getElementById("rGauge");
+
+      let isSwitchClosed = false;
+      let activeTerminal = null;
+      let connections = [];
+
+      const terminals = document.querySelectorAll(".terminal");
+      terminals.forEach((term) => {
+        term.addEventListener("click", (e) => {
+          handleTerminalClick(e.target);
+        });
+      });
+
+      function handleTerminalClick(term) {
+        if (term.classList.contains("connected") && activeTerminal !== term) {
+          alert("⚠️ Cổng vít đồng này đã được cài dây dẫn rồi!");
+          return;
+        }
+
+        if (!activeTerminal) {
+          activeTerminal = term;
+          term.style.background = "#fef08a";
+        } else {
+          if (activeTerminal.id === term.id) {
+            term.style.background =
+              "radial-gradient(circle, #fbbf24 0%, #b45309 100%)";
+            activeTerminal = null;
+            return;
+          }
+
+          let compA = activeTerminal.id.split("_")[1];
+          let compB = term.id.split("_")[1];
+          if (compA === compB) {
+            alert("⚠️ Không được nối tắt 2 đầu của cùng một linh kiện!");
+            activeTerminal.style.background =
+              "radial-gradient(circle, #fbbf24 0%, #b45309 100%)";
+            activeTerminal = null;
+            return;
+          }
+
+          drawSeparatedOrthogonalWire(activeTerminal, term);
+          connections.push({ from: activeTerminal.id, to: term.id });
+
+          activeTerminal.classList.add("connected");
+          term.classList.add("connected");
+
+          activeTerminal = null;
+          checkCircuitState();
+        }
+      }
+
+      function drawSeparatedOrthogonalWire(termA, termB) {
+        let rectA = termA.getBoundingClientRect();
+        let rectB = termB.getBoundingClientRect();
+        let stageRect = document
+          .getElementById("labStage")
+          .getBoundingClientRect();
+
+        let x1 = rectA.left - stageRect.left + 11;
+        let y1 = rectA.top - stageRect.top + 11;
+        let x2 = rectB.left - stageRect.left + 11;
+        let y2 = rectB.top - stageRect.top + 11;
+
+        let wireClass = "neg-wire";
+        let pathStr = "";
+
+        if (
+          (termA.id === "t_bat_pos" && termB.id === "t_sw_in") ||
+          (termB.id === "t_bat_pos" && termA.id === "t_sw_in")
+        ) {
+          wireClass = "pos-wire";
+          let topY = Math.min(y1, y2) - 15;
+          pathStr = `M ${x1} ${y1} L ${x1} ${topY} L ${x2} ${topY} L ${x2} ${y2}`;
+        } else if (
+          (termA.id === "t_sw_out" && termB.id === "t_lamp_in") ||
+          (termA.id === "t_lamp_in" && termB.id === "t_sw_out") ||
+          (termB.id === "t_lamp_in" && termA.id === "t_sw_out")
+        ) {
+          wireClass = "pos-wire";
+          let topY = Math.min(y1, y2) - 15;
+          pathStr = `M ${x1} ${y1} L ${x1} ${topY} L ${x2} ${topY} L ${x2} ${y2}`;
+        } else {
+          wireClass = "neg-wire";
+          let bottomY = Math.max(y1, y2) + 40;
+          pathStr = `M ${x1} ${y1} L ${x1} ${bottomY} L ${x2} ${bottomY} L ${x2} ${y2}`;
+        }
+
+        let path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
+        path.setAttribute("d", pathStr);
+        path.setAttribute("class", wireClass);
+        path.setAttribute("id", `wire_${termA.id}_${termB.id}`);
+        svgCanvas.appendChild(path);
+
+        let flowPath = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
+        flowPath.setAttribute("d", pathStr);
+        flowPath.setAttribute("class", "electron-flow");
+        flowPath.setAttribute("id", `flow_${termA.id}_${termB.id}`);
+        svgCanvas.appendChild(flowPath);
+      }
+
+      function checkCircuitState() {
+        let connection_1 = hasExactConnection("t_bat_pos", "t_sw_in");
+        let connection_2 = hasExactConnection("t_sw_out", "t_lamp_in");
+        let connection_3 = hasExactConnection("t_lamp_out", "t_bat_neg");
+
+        let allBasePaths = document.querySelectorAll(
+          "path:not(.electron-flow)",
+        );
+
+        if (connection_1 && connection_2 && connection_3) {
+          logCircuit.innerText = "Mạch Hoàn Chỉnh (Kín) ✔";
+          logCircuit.style.color = "#10b981";
+
+          if (isSwitchClosed) {
+            lampNode.classList.add("glowing");
+            allBasePaths.forEach((p) => p.classList.add("powered"));
+            logEffect.innerText = "Phát sáng + Tỏa nhiệt 🔥";
+            logEffect.style.color = "#ea580c";
+            insightDesc.innerHTML =
+              "✔ <b>Hiện tượng:</b> Dòng điện đi từ cực dương qua cầu dao khép kín làm sợi mayso nóng lên. Điện năng đã chuyển hóa thành <b>nhiệt năng</b> tạo ra hơi nóng và ánh sáng.";
+
+            updateDials(1.5, 0.5, 3.0, true);
+          } else {
+            deactivateLamp(allBasePaths);
+            insightDesc.innerHTML =
+              "💡 Bạn đã đi dây chuẩn sơ đồ giáo khoa! Hãy nhấn nút <b>'GẠT CẦU DAO'</b> để đóng điện thực hành.";
+            updateDials(0.0, 0.0, 3.0, false);
+          }
+        } else {
+          logCircuit.innerText = "Mạch sai tiêu chuẩn ❌";
+          logCircuit.style.color = "#ef4444";
+          deactivateLamp(allBasePaths);
+          updateDials(0.0, 0.0, 0.0, false);
+
+          if (
+            hasExactConnection("t_bat_pos", "t_lamp_in") ||
+            hasExactConnection("t_bat_pos", "t_lamp_out")
+          ) {
+            insightDesc.innerHTML =
+              "⚠️ <b>Nhắc nhở sư phạm:</b> Dù mạch điện kín giúp đèn sáng được, nhưng bạn đang <b>nối tắt bỏ qua cầu dao gạt</b>. Hãy tháo dây và nối đúng trình tự để đảm bảo an toàn!";
+          } else if (connections.length >= 3) {
+            insightDesc.innerHTML =
+              "❌ Sơ đồ đi dây chưa chính xác. Vui lòng kiểm tra lại trình tự liên kết giữa các thiết bị theo sách hướng dẫn.";
+          }
+        }
+      }
+
+      function updateDials(v, a, r, active) {
+        txtVolts.innerText = v.toFixed(2) + " V";
+        txtAmps.innerText = a.toFixed(2) + " A";
+        txtOhms.innerText = r.toFixed(2) + " Ω";
+
+        if (active) {
+          vGauge.classList.add("active");
+          aGauge.classList.add("active");
+          rGauge.classList.add("active");
+        } else {
+          vGauge.classList.remove("active");
+          aGauge.classList.remove("active");
+          rGauge.classList.remove("active");
+        }
+      }
+
+      function hasExactConnection(idA, idB) {
+        return connections.some(
+          (c) =>
+            (c.from === idA && c.to === idB) ||
+            (c.from === idB && c.to === idA),
+        );
+      }
+
+      function deactivateLamp(allBasePaths) {
+        lampNode.classList.remove("glowing");
+        allBasePaths.forEach((p) => p.classList.remove("powered"));
+        logEffect.innerText = "Không có dòng điện";
+        logEffect.style.color = "#64748b";
+      }
+
+      document
+        .getElementById("btnToggleSwitch")
+        .addEventListener("click", () => {
+          isSwitchClosed = !isSwitchClosed;
+          if (isSwitchClosed) {
+            switchNode.classList.add("active");
+            leverShape.style.transform = "rotate(0deg)";
+            logSwitch.innerText = "Đóng Mạch (ON)";
+            logSwitch.style.color = "#10b981";
+          } else {
+            switchNode.classList.remove("active");
+            leverShape.style.transform = "rotate(-25deg)";
+            logSwitch.innerText = "Đang Mở (OFF)";
+            logSwitch.style.color = "#ef4444";
+          }
+          checkCircuitState();
+        });
+
+      document
+        .getElementById("btnResetCircuit")
+        .addEventListener("click", () => {
+          svgCanvas.innerHTML = "";
+          connections = [];
+          isSwitchClosed = false;
+
+          switchNode.classList.remove("active");
+          leverShape.style.transform = "rotate(-25deg)";
+
+          terminals.forEach((t) => {
+            t.classList.remove("connected");
+            t.style.background =
+              "radial-gradient(circle, #fbbf24 0%, #b45309 100%)";
+          });
+
+          activeTerminal = null;
+          logSwitch.innerText = "Đang Mở (OFF)";
+          logSwitch.style.color = "#ef4444";
+
+          checkCircuitState();
+        });
+    </script>
+  </body>
+</html>

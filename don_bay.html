@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Science Lab - Đòn Bẩy Ảo</title>
+    <style>
+      /* --- THIẾT LẬP CHUNG (THEME PHÒNG LAB HIỆN ĐẠI) --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      body {
+        /* Nền giả lập không gian phòng Lab có chiều sâu */
+        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        color: #f8fafc;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px 20px;
+      }
+
+      /* --- NÚT QUAY TRỞ VỀ TRANG QR CHỦ --- */
+      .btn-back-portal {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 10px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 9999; /* Đảm bảo luôn nổi trên cùng các linh kiện */
+        transition: all 0.3s ease;
+      }
+
+      .btn-back-portal:hover {
+        color: #ffffff;
+        background: rgba(51, 65, 85, 0.9);
+        border-color: #38bdf8;
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .btn-back-portal .icon-arrow {
+        transition: transform 0.2s ease;
+      }
+
+      .btn-back-portal:hover .icon-arrow {
+        transform: translateX(
+          -3px
+        ); /* Hiệu ứng mũi tên dịch chuyển nhẹ khi di chuột */
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+      }
+
+      header h1 {
+        font-size: 28px;
+        background: linear-gradient(to right, #38bdf8, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+      }
+
+      header p {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-top: 5px;
+        text-transform: none;
+      }
+
+      /* --- THANH NGĂN CÁCH PHẦN ĐẦU WEB (NEON DIVIDER) --- */
+      .header-divider {
+        width: 100%;
+        max-width: 1200px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(56, 189, 248, 0.3) 50%,
+          transparent 100%
+        );
+        margin-bottom: 30px;
+        box-shadow: 0 1px 4px rgba(56, 189, 248, 0.1);
+      }
+
+      /* --- BỐ CỤC CHÍNH --- */
+      .container {
+        display: flex;
+        width: 100%;
+        max-width: 1200px;
+        gap: 25px;
+        align-items: stretch;
+      }
+
+      /* Khung bên trái & bên phải dạng kính mờ (Glassmorphism) */
+      .glass-panel {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 20px;
+        flex: 1;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      h3 {
+        font-size: 16px;
+        color: #38bdf8;
+        border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+        padding-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .instruction-list {
+        list-style: none;
+        font-size: 13px;
+        color: #cbd5e1;
+        line-height: 1.6;
+      }
+
+      .instruction-list li {
+        margin-bottom: 12px;
+        position: relative;
+        padding-left: 20px;
+      }
+
+      .instruction-list li::before {
+        content: "•";
+        color: #818cf8;
+        font-weight: bold;
+        position: absolute;
+        left: 5px;
+        font-size: 16px;
+      }
+
+      /* --- KHU VỰC THÍ NGHIỆM TRUNG TÂM (MAIN LAB) --- */
+      .main-lab {
+        flex: 2.2;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        box-shadow:
+          inset 0 0 50px rgba(0, 0, 0, 0.5),
+          0 20px 40px rgba(0, 0, 0, 0.4);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Sân khấu vật lý */
+      .lab-stage {
+        position: relative;
+        width: 100%;
+        height: 380px;
+        border-bottom: 16px solid transparent;
+        border-image: linear-gradient(to bottom, #334155, #1e293b) 16;
+      }
+
+      /* Hệ thống lưới định vị (Grid lines) tạo cảm giác kỹ thuật */
+      .lab-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+      }
+
+      /* TRỤ ĐỠ / ĐIỂM TỰA (Khối kim loại 3D vững chắc) */
+      .fulcrum-container {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 80px;
+        z-index: 2;
+      }
+
+      .fulcrum-3d {
+        width: 0;
+        height: 0;
+        border-left: 30px solid transparent;
+        border-right: 30px solid transparent;
+        border-bottom: 80px solid #64748b;
+        position: relative;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+      }
+
+      .fulcrum-3d::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        border-left: 0 solid transparent;
+        border-right: 30px solid transparent;
+        border-bottom: 80px solid #475569;
+        transform: scaleX(1);
+      }
+
+      /* Trục xoay tròn tâm đòn bẩy */
+      .pivot-pin {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        background: #94a3b8;
+        border-radius: 50%;
+        box-shadow:
+          inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+          0 2px 4px rgba(0, 0, 0, 0.4);
+        z-index: 5;
+      }
+
+      /* THANH ĐÒN BẨY */
+      .lever-system {
+        position: absolute;
+        bottom: 74px;
+        left: 5%;
+        width: 90%;
+        height: 20px;
+        z-index: 3;
+        transform-origin: center center;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .lever-bar-wood {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, #d97706 0%, #b45309 100%);
+        border-radius: 4px;
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.4),
+          inset 0 2px 2px rgba(255, 255, 255, 0.2);
+        position: relative;
+      }
+
+      .ruler-lines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+        opacity: 0.6;
+      }
+      .ruler-lines span {
+        width: 1px;
+        height: 100%;
+        background: #fef08a;
+      }
+
+      /* VẬT CẢN (Quả cân sắt khối 3D thực tế dập chữ 4N) */
+      .weight-3d {
+        position: absolute;
+        bottom: 20px;
+        left: 40px;
+        width: 55px;
+        height: 65px;
+        background: linear-gradient(135deg, #475569 0%, #1e293b 100%);
+        border-radius: 6px 6px 2px 2px;
+        box-shadow:
+          -5px 5px 10px rgba(0, 0, 0, 0.5),
+          inset 2px 2px 3px rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 14px;
+        color: #94a3b8;
+        border: 1px solid #334155;
+        text-shadow:
+          -1px -1px 0px #0f172a,
+          1px 1px 0px #64748b;
+      }
+
+      .weight-3d::before {
+        content: "";
+        position: absolute;
+        top: -12px;
+        width: 20px;
+        height: 12px;
+        border: 4px solid #475569;
+        border-bottom: none;
+        border-radius: 10px 10px 0 0;
+      }
+
+      /* LỰC KẾ ĐIỆN TỬ HIỆN ĐẠI (Digital Force Gauge) */
+      .digital-gauge {
+        position: absolute;
+        bottom: 20px;
+        right: 40px;
+        width: 55px;
+        height: 120px;
+        background: linear-gradient(to bottom, #1e3a8a 0%, #0f172a 100%);
+        border: 2px solid #3b82f6;
+        border-radius: 8px;
+        box-shadow:
+          5px 5px 15px rgba(0, 0, 0, 0.5),
+          0 0 10px rgba(59, 130, 246, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 4px;
+        transition:
+          right 0.3s ease,
+          bottom 0.1s linear;
+      }
+
+      .gauge-led {
+        width: 80%;
+        height: 4px;
+        background: #10b981;
+        border-radius: 2px;
+        box-shadow: 0 0 6px #10b981;
+        margin-bottom: 8px;
+      }
+
+      .gauge-screen {
+        width: 90%;
+        background: #020617;
+        border: 1px solid #1e293b;
+        border-radius: 4px;
+        padding: 6px 2px;
+        text-align: center;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+      }
+
+      .lcd-value {
+        font-family: monospace;
+        font-size: 16px;
+        font-weight: bold;
+        color: #38bdf8;
+        text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+      }
+
+      .gauge-label {
+        font-size: 9px;
+        color: #64748b;
+        margin-top: 4px;
+        font-weight: bold;
+      }
+
+      .gauge-hook {
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 3px;
+        height: 15px;
+        background: #94a3b8;
+      }
+      .gauge-hook::after {
+        content: "凹";
+        position: absolute;
+        bottom: -6px;
+        left: -4px;
+        font-size: 10px;
+        color: #94a3b8;
+      }
+
+      /* --- KHU VỰC ĐIỀU KHIỂN (CONTROLS) --- */
+      .control-panel {
+        background: rgba(15, 23, 42, 0.6);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .slider-wrapper {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        max-width: 600px;
+        gap: 15px;
+      }
+
+      .slider-label {
+        font-size: 14px;
+        color: #94a3b8;
+        white-space: nowrap;
+        font-weight: 500;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: #334155;
+        height: 8px;
+        border-radius: 4px;
+        outline: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #38bdf8;
+        cursor: pointer;
+        box-shadow: 0 0 10px #38bdf8;
+        transition: transform 0.1s;
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+      }
+
+      .btn-action {
+        background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        transition: all 0.2s;
+      }
+
+      .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.4);
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      }
+
+      /* --- SỔ TAY GHI CHÉP (NOTEBOOK) --- */
+      .notebook-panel {
+        background: #fdfbf7;
+        color: #1e293b;
+        border-left: 6px solid #f59e0b;
+      }
+
+      .notebook-panel h3 {
+        color: #d97706;
+        border-bottom: 2px solid rgba(217, 119, 6, 0.15);
+      }
+
+      .record-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      }
+
+      .record-title {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: bold;
+      }
+
+      .record-value {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .insight-box {
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 15px;
+        color: #92400e;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.5;
+        text-align: justify;
+        margin-top: auto;
+      }
+
+      @media (max-width: 968px) {
+        .container {
+          flex-direction: column;
+        }
+        .glass-panel {
+          flex: none;
+          width: 100%;
+        }
+        .btn-back-portal {
+          position: absolute;
+          top: 15px;
+          left: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="qr.html" class="btn-back-portal">
+      <span class="icon-arrow">⬅</span> Quay về Trang Chủ QR
+    </a>
+
+    <header>
+      <h1>AR Science Lab</h1>
+      <p>Phòng Thí Nghiệm: Hiện tượng Đòn Bẩy Vật Lý</p>
+    </header>
+
+    <div class="header-divider"></div>
+
+    <div class="container">
+      <div class="glass-panel">
+        <div>
+          <h3>📦 Thiết bị kiểm thử</h3>
+          <ul class="instruction-list" style="margin-top: 10px">
+            <li>Thanh đòn bẩy cứng chia vạch định vị</li>
+            <li>Điểm tựa dạng khối hình học chịu tải</li>
+            <li>Quả cân thép tiêu chuẩn đúc khối (4 N)</li>
+            <li>Lực kế vi xử lý kỹ thuật số tự động nhảy số</li>
+          </ul>
+        </div>
+        <div>
+          <h3>⚡ Nhiệm vụ thực hành</h3>
+          <ol class="instruction-list" style="margin-top: 10px">
+            <li>
+              Dùng ngón tay/chuột kéo <b>Thanh trượt</b> bên dưới khu mô phỏng.
+            </li>
+            <li>
+              Quan sát <b>Góc bập bênh nhún vật lý</b> của thanh đòn bẩy khi di
+              chuyển vị trí.
+            </li>
+            <li>
+              Xem số đo hiển thị trên <b>màn hình LED Lực kế</b> và rút ra định
+              luật cơ học.
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="main-lab">
+        <div class="lab-stage">
+          <div class="lever-system" id="leverSystem">
+            <div class="lever-bar-wood">
+              <div class="ruler-lines">
+                <span></span><span></span><span></span><span></span
+                ><span></span> <span></span><span></span><span></span
+                ><span></span><span></span> <span></span><span></span
+                ><span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="weight-3d">4 N</div>
+            <div class="digital-gauge" id="digitalGauge">
+              <div class="gauge-led" id="gaugeLed"></div>
+              <div class="gauge-screen">
+                <span class="lcd-value" id="lcdDisplay">4.0N</span>
+              </div>
+              <span class="gauge-label">FORCE (N)</span>
+              <div class="gauge-hook"></div>
+            </div>
+          </div>
+
+          <div class="fulcrum-container">
+            <div class="pivot-pin"></div>
+            <div class="fulcrum-3d"></div>
+          </div>
+        </div>
+
+        <div class="control-panel">
+          <div class="slider-wrapper">
+            <span class="slider-label">Vị trí Lực kế (Khoảng cách):</span>
+            <input type="range" id="leverSlider" min="15" max="85" value="25" />
+          </div>
+          <button class="btn-action" id="actionReset">Reset Thiết Bị</button>
+        </div>
+      </div>
+
+      <div class="glass-panel notebook-panel">
+        <h3>📝 Sổ tay kết quả ảo</h3>
+
+        <div class="record-card">
+          <span class="record-title">Tải trọng (Vật cản):</span>
+          <span class="record-value" style="color: #e11d48"
+            >4.0 N (Cố định)</span
+          >
+        </div>
+
+        <div class="record-card">
+          <span class="record-title">Chiều dài Cánh tay đòn:</span>
+          <span class="record-value" id="logDistance" style="color: #2563eb"
+            >Ngắn</span
+          >
+        </div>
+
+        <div class="record-card">
+          <span class="record-title">Giá trị lực phản hồi thực tế:</span>
+          <span class="record-value" id="logForce" style="color: #0f172a"
+            >4.0 N</span
+          >
+        </div>
+
+        <div class="insight-box">
+          💡 <b>PHÂN TÍCH KHẢO SÁT:</b><br />
+          <span id="insightText"
+            >Hệ thống đang khởi tạo. Vui lòng di chuyển vị trí lực kế để đo đạc
+            thông số vật lý hiện tượng.</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const slider = document.getElementById("leverSlider");
+      const leverSystem = document.getElementById("leverSystem");
+      const digitalGauge = document.getElementById("digitalGauge");
+      const lcdDisplay = document.getElementById("lcdDisplay");
+      const gaugeLed = document.getElementById("gaugeLed");
+      const logDistance = document.getElementById("logDistance");
+      const logForce = document.getElementById("logForce");
+      const insightText = document.getElementById("insightText");
+      const actionReset = document.getElementById("actionReset");
+
+      function runSimulation(posValue) {
+        let position = parseFloat(posValue);
+
+        let visualPercentage = 85 - position;
+        digitalGauge.style.right = visualPercentage + "%";
+
+        let fixedWeight = 4.0;
+        let targetForce = (fixedWeight * (25 / position)).toFixed(1);
+        let tiltAngle = 0;
+
+        if (position < 25) {
+          tiltAngle = -3;
+          gaugeLed.style.background = "#ef4444";
+          gaugeLed.style.boxShadow = "0 0 8px #ef4444";
+          logDistance.innerText = "Rất ngắn (Gần trục)";
+          insightText.innerHTML =
+            "❌ <b>Hiện tượng:</b> Lực kế đặt quá gần điểm tựa. Cánh tay đòn ngắn khiến lực cơ học sinh ra nhỏ hơn trọng lực quả cân, đòn bẩy nghiêng về bên nặng.";
+        } else if (position >= 25 && position <= 30) {
+          tiltAngle = 0;
+          gaugeLed.style.background = "#10b981";
+          gaugeLed.style.boxShadow = "0 0 8px #10b981";
+          logDistance.innerText = "Chuẩn cân bằng";
+          insightText.innerHTML =
+            "✔ <b>Hiện tượng:</b> Hệ thống cơ học đạt trạng thái cân bằng momen hoàn hảo. Lực kế chỉ số chính xác tương đương trọng lượng vật nặng.";
+        } else {
+          tiltAngle = (position * 0.05).toFixed(1);
+          if (tiltAngle > 3.5) tiltAngle = 3.5;
+          gaugeLed.style.background = "#3b82f6";
+          gaugeLed.style.boxShadow = "0 0 8px #3b82f6";
+          logDistance.innerText = "Dài (Xa điểm tựa)";
+          insightText.innerHTML =
+            "💡 <b>ĐỊNH LUẬT:</b> Đúng theo tài liệu thực hành, khi khoảng cách từ vị trí kéo của lực kế đến điểm tựa càng lớn thì lực cơ học cần tác dụng để nâng vật càng nhỏ!";
+        }
+
+        leverSystem.style.transform = `rotate(${tiltAngle}deg)`;
+
+        let counter = 0;
+        let interval = setInterval(() => {
+          lcdDisplay.innerText = (Math.random() * 5).toFixed(1) + " N";
+          counter++;
+          if (counter > 3) {
+            clearInterval(interval);
+            lcdDisplay.innerText = targetForce + " N";
+            logForce.innerText = targetForce + " N";
+          }
+        }, 30);
+      }
+
+      slider.addEventListener("input", (e) => {
+        runSimulation(e.target.value);
+      });
+
+      actionReset.addEventListener("click", () => {
+        slider.value = 25;
+        runSimulation(25);
+      });
+
+      runSimulation(25);
+    </script>
+  </body>
+</html>
