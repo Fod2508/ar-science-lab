@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
@@ -46,22 +46,28 @@
         text-align: center;
         margin-bottom: 20px;
         z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
       }
 
-      header h1 {
-        font-size: 32px;
-        background: linear-gradient(to right, #38bdf8, #fbbf24, #f43f5e);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 2px;
+      /* ĐỊNH DẠNG KHUNG LOGO HÌNH ẢNH MỚI NÂNG CẤP */
+      .brand-logo {
+        max-height: 55px;
+        width: auto;
+        filter: drop-shadow(0 2px 10px rgba(56, 189, 248, 0.4));
+        transition: transform 0.3s ease;
+      }
+
+      .brand-logo:hover {
+        transform: scale(1.04);
       }
 
       header p {
         color: #94a3b8;
         font-size: 14px;
-        margin-top: 6px;
+        margin-top: 2px;
       }
 
       /* --- THANH ĐƯỜNG KẺ NGĂN CÁCH TRỰC QUAN (NEON DIVIDER) --- */
@@ -73,7 +79,7 @@
           90deg,
           transparent 0%,
           rgba(56, 189, 248, 0.2) 50%,
-          transparent 100%
+          transparent 1000%
         );
         margin-bottom: 40px;
         box-shadow: 0 1px 4px rgba(56, 189, 248, 0.1);
@@ -109,7 +115,6 @@
         overflow: hidden;
       }
 
-      /* Hiệu ứng phát sáng Neon riêng biệt cho từng bài khi rê chuột vào */
       .lab-card:hover {
         transform: translateY(-10px);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
@@ -213,7 +218,7 @@
   </head>
   <body>
     <header>
-      <h1>AR Science Lab</h1>
+      <img src="favicon.png" alt="AR Science Lab 3D Logo" class="brand-logo" />
       <p>Hệ thống mô phỏng phòng thí nghiệm các hiện tượng vật lý</p>
     </header>
 
@@ -255,9 +260,7 @@
           />
         </div>
 
-        <a href="su_no_vi_nhiet.html" class="btn-entry"
-          >🚀 Khởi Chạy Thí Nghiệm</a
-        >
+        <a href="su_no_vi_nhiet.html" class="btn-entry">🚀 Khởi Chạy Thí Nghiệm</a>
       </div>
 
       <div class="lab-card card-dien">
@@ -276,9 +279,7 @@
           />
         </div>
 
-        <a href="tac_dung_nhiet.html" class="btn-entry"
-          >🚀 Khởi Chạy Thí Nghiệm</a
-        >
+        <a href="tac_dung_nhiet.html" class="btn-entry">🚀 Khởi Chạy Thí Nghiệm</a>
       </div>
     </div>
   </body>
